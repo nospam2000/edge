@@ -133,7 +133,7 @@ void NodejsFuncInvokeContext::CompleteWithError(System::Exception^ exception)
 {
     DBG("NodejsFuncInvokeContext::CompleteWithError");
     this->exception = exception;
-    Task::Run(gcnew System::Action(this, &NodejsFuncInvokeContext::Complete));
+    System::Threading::Tasks::Task::Run(gcnew System::Action(this, &NodejsFuncInvokeContext::Complete));
 }
 
 void NodejsFuncInvokeContext::CompleteWithResult(v8::Local<v8::Value> result)
@@ -142,7 +142,7 @@ void NodejsFuncInvokeContext::CompleteWithResult(v8::Local<v8::Value> result)
     try
     {
         this->result = ClrFunc::MarshalV8ToCLR(result);
-        Task::Run(gcnew System::Action(this, &NodejsFuncInvokeContext::Complete));
+        System::Threading::Tasks::Task::Run(gcnew System::Action(this, &NodejsFuncInvokeContext::Complete));
     }
     catch (System::Exception^ e)
     {

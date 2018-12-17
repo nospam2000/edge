@@ -26,7 +26,7 @@ if "%1" neq "" (
 )
 if "%VERSIONS%" equ "" set VERSIONS=0.10.0
 pushd %SELF%\..
-for %%V in (%VERSIONS%) do call :build ia32 x86 %%V 
+REM for %%V in (%VERSIONS%) do call :build ia32 x86 %%V 
 for %%V in (%VERSIONS%) do call :build x64 x64 %%V 
 popd
 
@@ -54,7 +54,7 @@ if not exist "%GYP%" (
     exit /b -1
 )
 
-"%NODEEXE%" "%GYP%" configure build --msvs_version=2015 -%FLAVOR%
+"%NODEEXE%" "%GYP%" configure build --msvs_version=2017 -%FLAVOR%
 if %ERRORLEVEL% neq 0 (
     echo Error building edge.node %FLAVOR% for node.js %2 v%3
     exit /b -1

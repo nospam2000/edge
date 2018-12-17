@@ -26,9 +26,9 @@ void clrFuncProxyNearDeath(const Nan::WeakCallbackInfo<T> &data)
     delete wrap;
 }
 
-v8::Local<v8::Function> ClrFunc::Initialize(System::Func<System::Object^,Task<System::Object^>^>^ func)
+v8::Local<v8::Function> ClrFunc::Initialize(System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>^ func)
 {
-    DBG("ClrFunc::Initialize Func<object,Task<object>> wrapper");
+    DBG("ClrFunc::Initialize Func<object,System::Threading::Tasks::Task<object>> wrapper");
 
     static Nan::Persistent<v8::Function> proxyFactory;
     static Nan::Persistent<v8::Function> proxyFunction;
@@ -88,7 +88,7 @@ NAN_METHOD(ClrFunc::Initialize)
 
             ClrFuncReflectionWrap^ wrap = ClrFuncReflectionWrap::Create(assembly, typeName, methodName);
             result = ClrFunc::Initialize(
-                gcnew System::Func<System::Object^,Task<System::Object^>^>(
+                gcnew System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>(
                     wrap, &ClrFuncReflectionWrap::Call));
         }
         else {
@@ -111,8 +111,8 @@ NAN_METHOD(ClrFunc::Initialize)
             }
 
             System::Object^ parameters = ClrFunc::MarshalV8ToCLR(options);
-            System::Func<System::Object^,Task<System::Object^>^>^ func =
-                (System::Func<System::Object^,Task<System::Object^>^>^)compileFunc->Invoke(
+            System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>^ func =
+                (System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>^)compileFunc->Invoke(
                     compilerInstance, gcnew array<System::Object^> { parameters });
             result = ClrFunc::Initialize(func);
         }
@@ -125,7 +125,7 @@ NAN_METHOD(ClrFunc::Initialize)
     }
 }
 
-void edgeAppCompletedOnCLRThread(Task<System::Object^>^ task, System::Object^ state)
+void edgeAppCompletedOnCLRThread(System::Threading::Tasks::Task<System::Object^>^ task, System::Object^ state)
 {
     DBG("edgeAppCompletedOnCLRThread");
     ClrFuncInvokeContext^ context = (ClrFuncInvokeContext^)state;
@@ -275,9 +275,9 @@ v8::Local<v8::Value> ClrFunc::MarshalCLRToV8(System::Object^ netdata)
 
         jsdata = result;
     }
-    else if (type == System::Func<System::Object^,Task<System::Object^>^>::typeid)
+    else if (type == System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>::typeid)
     {
-        jsdata = ClrFunc::Initialize((System::Func<System::Object^,Task<System::Object^>^>^)netdata);
+        jsdata = ClrFunc::Initialize((System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>^)netdata);
     }
     else if (System::Exception::typeid->IsAssignableFrom(type))
     {
@@ -395,8 +395,8 @@ System::Object^ ClrFunc::MarshalV8ToCLR(v8::Local<v8::Value> jsdata)
     if (jsdata->IsFunction())
     {
         NodejsFunc^ functionContext = gcnew NodejsFunc(v8::Local<v8::Function>::Cast(jsdata));
-        System::Func<System::Object^,Task<System::Object^>^>^ netfunc =
-            gcnew System::Func<System::Object^,Task<System::Object^>^>(
+        System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>^ netfunc =
+            gcnew System::Func<System::Object^,System::Threading::Tasks::Task<System::Object^>^>(
                 functionContext, &NodejsFunc::FunctionWrapper);
 
         return netfunc;
@@ -487,7 +487,7 @@ v8::Local<v8::Value> ClrFunc::Call(v8::Local<v8::Value> payload, v8::Local<v8::V
     {
         ClrFuncInvokeContext^ context = gcnew ClrFuncInvokeContext(callback);
         context->Payload = ClrFunc::MarshalV8ToCLR(payload);
-        Task<System::Object^>^ task = this->func(context->Payload);
+        System::Threading::Tasks::Task<System::Object^>^ task = this->func(context->Payload);
         if (task->IsCompleted)
         {
             // Completed synchronously. Return a value or invoke callback based on call pattern.
@@ -508,7 +508,7 @@ v8::Local<v8::Value> ClrFunc::Call(v8::Local<v8::Value> payload, v8::Local<v8::V
             context->InitializeAsyncOperation();
 
             // Will complete asynchronously. Schedule continuation to finish processing.
-            task->ContinueWith(gcnew System::Action<Task<System::Object^>^,System::Object^>(
+            task->ContinueWith(gcnew System::Action<System::Threading::Tasks::Task<System::Object^>^,System::Object^>(
                 edgeAppCompletedOnCLRThread), context);
         }
     }

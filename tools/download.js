@@ -1,3 +1,7 @@
+
+var globalTunnel = require('global-tunnel-ng');
+globalTunnel.initialize();
+
 var http = require('http');
 
 var urls;
