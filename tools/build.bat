@@ -26,7 +26,7 @@ if "%1" neq "" (
 )
 if "%VERSIONS%" equ "" set VERSIONS=0.10.0
 pushd %SELF%\..
-REM for %%V in (%VERSIONS%) do call :build ia32 x86 %%V 
+for %%V in (%VERSIONS%) do call :build ia32 x86 %%V 
 for %%V in (%VERSIONS%) do call :build x64 x64 %%V 
 popd
 
