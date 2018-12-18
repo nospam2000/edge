@@ -3,7 +3,7 @@
 
 class corehost_init_t;
 class runtime_config_t;
-struct fx_ver_t;
+class fx_ver_t;
 
 #include "../host/libhost.h"
 
