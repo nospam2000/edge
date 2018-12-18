@@ -294,10 +294,20 @@ v8::Local<v8::Value> ClrFunc::MarshalCLRToV8(System::Object^ netdata)
 v8::Local<v8::Value> ClrFunc::MarshalCLRExceptionToV8(System::Exception^ exception)
 {
     DBG("ClrFunc::MarshalCLRExceptionToV8");
-    Nan::EscapableHandleScope scope;
+	Nan::EscapableHandleScope scope;
     v8::Local<v8::Object> result;
     v8::Local<v8::String> message;
     v8::Local<v8::String> name;
+
+	v8::Isolate* isolate = v8::Isolate::GetCurrent();
+	Local<Context> context;
+	if (isolate)
+	{
+		// TODO: when there is no active isolate, the rest of the function will also not
+		// work, but even returning a v8:Value cannot work, and we cannot return nullptr here.
+		// Return values should probably be changed to use 'maybe' instead of Local<v8::Value>.
+		context = isolate->GetCurrentContext();
+	}
 
     if (exception == nullptr)
     {
@@ -327,7 +337,7 @@ v8::Local<v8::Value> ClrFunc::MarshalCLRExceptionToV8(System::Exception^ excepti
 
     // Construct an error that is just used for the prototype - not verify efficient
     // but 'typeof Error' should work in JavaScript
-    result->SetPrototype(v8::Exception::Error(message));
+    result->SetPrototype(context, v8::Exception::Error(message));
     result->Set(Nan::New<v8::String>("message").ToLocalChecked(), message);
 
     // Recording the actual type - 'name' seems to be the common used property

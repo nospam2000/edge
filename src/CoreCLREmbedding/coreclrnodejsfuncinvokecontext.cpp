@@ -77,6 +77,12 @@ void CoreClrNodejsFuncInvokeContext::InvokeCallback(void* data)
 
 	Nan::HandleScope scope;
 
+	v8::Isolate* isolate = v8::Isolate::GetCurrent();
+	if (!isolate)
+	{
+		// TODO: when there is no active isolate, the rest of the function will also not work
+	}
+
 	// See https://github.com/tjanczuk/edge/issues/125 for context
 	if (callbackFactory.IsEmpty())
 	{
@@ -93,7 +99,7 @@ void CoreClrNodejsFuncInvokeContext::InvokeCallback(void* data)
 		Nan::New(callbackFactory)->Call(Nan::GetCurrentContext()->Global(), 2, factoryArgv));
 
 	v8::Local<v8::Value> argv[] = { v8Payload, callback };
-	TryCatch tryCatch;
+	v8::TryCatch tryCatch(isolate);
 
 	DBG("CoreClrNodejsFuncInvokeContext::InvokeCallback - Calling JavaScript function");
 	Nan::Call(Nan::New(*(context->FunctionContext->Func)), Nan::GetCurrentContext()->Global(), 2, argv);

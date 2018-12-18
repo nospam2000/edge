@@ -420,6 +420,16 @@ v8::Local<v8::Value> CoreClrFunc::MarshalCLRToV8(void* marshalData, int payloadT
 {
 	Nan::EscapableHandleScope scope;
 
+	v8::Isolate* isolate = v8::Isolate::GetCurrent();
+	Local<Context> context;
+	if (isolate)
+	{
+		// TODO: when there is no active isolate, the rest of the function will also not
+		// work, but even returning a v8:Value cannot work, and we cannot return nullptr here.
+		// Return values should probably be changed to use 'maybe' instead of Local<v8::Value>.
+		context = isolate->GetCurrentContext();
+	}
+
 	if (payloadType == V8TypeString)
 	{
 		return scope.Escape(Nan::New<v8::String>((char*)marshalData).ToLocalChecked());
@@ -474,7 +484,7 @@ v8::Local<v8::Value> CoreClrFunc::MarshalCLRToV8(void* marshalData, int payloadT
 			v8::Local<v8::String> name = v8::Local<v8::String>::Cast(result->Get(Nan::New<v8::String>("Name").ToLocalChecked()));
 			v8::Local<v8::String> message = v8::Local<v8::String>::Cast(result->Get(Nan::New<v8::String>("Message").ToLocalChecked()));
 
-			result->SetPrototype(v8::Exception::Error(message));
+			result->SetPrototype(context, v8::Exception::Error(message));
 			result->Set(Nan::New<v8::String>("message").ToLocalChecked(), message);
 			result->Set(Nan::New<v8::String>("name").ToLocalChecked(), name);
 		}
